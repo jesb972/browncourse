@@ -1,0 +1,17 @@
+{
+  "name": "mxlookup",
+  "version": "1.0.0",
+  "description": "MX Record Lookup Service",
+  "main": "public/mxlookup.js",
+  "scripts": {
+    "start": "node public/mxlookup.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "dns": "^0.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 
